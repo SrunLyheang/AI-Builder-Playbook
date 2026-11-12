@@ -36,6 +36,22 @@ your-project/
 
 ## Install
 
+One command, works with Claude Code, Cursor, Codex, Gemini CLI and
+other agents that support `SKILL.md`:
+
+```bash
+npx skills add SrunLyheang/AI-Builder-Playbook
+```
+
+Install a single skill, or target specific agents:
+
+```bash
+npx skills add SrunLyheang/AI-Builder-Playbook --skill plan-app
+npx skills add SrunLyheang/AI-Builder-Playbook -a claude-code -a cursor
+```
+
+### Manual install
+
 Copy the three folders inside `skills/` into your agent's skills
 directory.
 

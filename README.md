@@ -83,17 +83,15 @@ In Claude Code you can also call them directly: `/plan-app`,
 Planning is where the thinking happens, so it gets the strong model;
 building follows a finished spec, so it gets a cheaper one.
 
-| Skill | Model | Why |
-| ----- | ----- | --- |
-| `plan-app` | strongest available (`opus`) | Every later step builds on these decisions |
-| `spec-unit` | strongest available (`opus`) | Turns the plan into exact instructions |
-| `build-unit` | mid-tier (`sonnet`, medium effort) | Carries out a spec that leaves nothing to decide |
+| Skill | Model to pick | Why |
+| ----- | ------------- | --- |
+| `plan-app` | your strongest | Every later step builds on these decisions |
+| `spec-unit` | your strongest | Turns the plan into exact instructions |
+| `build-unit` | a cheaper, faster one | Carries out a spec that leaves nothing to decide |
 
-Claude Code applies this from each skill's `model` field, for the turn
-that invokes the skill. `plan-app` runs over several turns, so set the
-session model yourself for the interview. Other agents ignore the
-field: switch models by hand between steps. To use different models,
-edit the `model` line at the top of each `SKILL.md`.
+You choose the model; the skills never change it. Each one tells you
+which model fits the next step at the moment you would switch (`/model`
+in Claude Code).
 
 The skills are also built to read little:
 

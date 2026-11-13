@@ -1,7 +1,6 @@
 ---
 name: plan-app
 description: Plan an app before any code is written. Interviews the user in four short rounds, then writes the context/ files, the entry-point file (CLAUDE.md or AGENTS.md) and an ordered build plan. Use when the user has an app idea, says "I want to build...", "help me plan my app", or asks to start coding a new project that has no context/ folder.
-model: opus
 ---
 
 # Plan App
@@ -11,10 +10,10 @@ agent can execute without guessing. Every gap left in a plan becomes an
 assumption the agent makes later, so the gaps are closed here, in
 conversation, and the answers are written where later sessions read them.
 
-Planning is the step that deserves the strongest model. The frontmatter
-sets it in Claude Code only for the turn that invokes the skill; if the
-session is on a small model, say so once and suggest switching for the
-interview.
+Planning deserves the strongest model the user has. Only the user
+changes the model: never switch it yourself. In your first message, tell
+them in one line that planning works best on their strongest model and
+that they can switch now if they are on a smaller one, then carry on.
 
 ## Rules
 
@@ -113,4 +112,4 @@ and each significant decision with its reason and what it beat.
 In one message: list the files written, show the ordered unit list, list
 the open questions, and ask the user to read the files and name any
 corrections. Apply corrections as edits. The next step is `spec-unit`
-for unit 01; do not start it in the same turn.
+for unit 01, on the same strong model; do not start it in the same turn.

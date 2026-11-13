@@ -2,7 +2,6 @@
 name: spec-unit
 description: Write the spec file for one unit of a planned build, so it can be implemented without guessing. Use when the user says "spec the next unit", "write the spec for unit 3", "what's next to build", or wants to add a feature to a project that has a context/ folder. Run before build-unit; writes no code.
 argument-hint: "[unit number or feature]"
-model: opus
 ---
 
 # Spec Unit
@@ -12,9 +11,10 @@ agent has nothing to guess and no other file to read. Specs are written
 just before a unit is built, never all upfront, because each unit
 changes what the next one needs.
 
-The thinking happens here, on the strongest model available;
-`build-unit` then carries the spec out on a cheaper one. That only works
-if the spec is self-contained.
+The thinking happens here, so this step belongs on the user's strongest
+model, and `build-unit` then carries the spec out on a cheaper one. That
+only works if the spec is self-contained. Only the user changes the
+model: never switch it yourself, only say which one fits.
 
 ## Rules
 
@@ -105,7 +105,9 @@ they agree.
 In `context/progress-tracker.md`, set Next Up to this unit with "spec
 written" and record any decision from Step 4 that affects later units.
 Give the user the file path and a summary of at most five lines, then
-stop. `build-unit` is next, after the user has read the spec.
+stop. Close with one line: `build-unit` is next, and it only follows
+the spec, so they can switch to a cheaper, faster model before running
+it.
 
 ## A request that is not in the plan
 

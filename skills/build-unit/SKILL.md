@@ -2,18 +2,16 @@
 name: build-unit
 description: Implement one unit of a planned build exactly as its spec file says, verify it, and update the progress tracker. Use when the user says "build unit 3", "build the next unit", "fix unit 3, it doesn't match the spec", or "unit 3 works, close it out", in a project with spec files in context/specs/. Needs a spec from spec-unit.
 argument-hint: "[unit number] [fix | close]"
-model: sonnet
-effort: medium
 ---
 
 # Build Unit
 
 Implement one unit from its spec: no more and no less.
 
-The decisions were made when the spec was written, on a stronger model.
-This skill carries them out, which is why it runs on a cheaper one. It
-makes no product or design decisions; when one is needed, it stops and
-asks.
+The decisions were made when the spec was written. This skill carries
+them out, so a cheaper, faster model is enough for it. It makes no
+product or design decisions; when one is needed, it stops and asks.
+Only the user changes the model: never switch it yourself.
 
 ## Load
 
@@ -92,4 +90,5 @@ For when the user confirms the unit works.
    a storage decision, a convention, the scope), update that file.
 4. Commit with a message naming the unit. Push or open a pull request
    only when asked.
-5. Name the next step, `spec-unit` for the next unit, and stop.
+5. Name the next step in one line and stop: `spec-unit` for the next
+   unit, after switching back to their strongest model.

@@ -1,180 +1,95 @@
 ---
 name: build-unit
-description: Implement one unit of a planned build exactly as its spec file says, verify it against the spec's checklist, and update the progress tracker. Use this whenever the user says "build unit 3", "implement the next unit", "implement context/specs/04-...", "build the spec", "fix unit 3, it doesn't match the spec", "unit 3 is done, close it out", or asks for changes or extra features while a unit is being built, in a project that has a context/ folder with spec files. Requires a spec written by spec-unit; if none exists, run that first.
+description: Implement one unit of a planned build exactly as its spec file says, verify it, and update the progress tracker. Use when the user says "build unit 3", "build the next unit", "fix unit 3, it doesn't match the spec", or "unit 3 works, close it out", in a project with spec files in context/specs/. Needs a spec from spec-unit.
+argument-hint: "[unit number] [fix | close]"
+model: sonnet
+effort: medium
 ---
 
 # Build Unit
 
 Implement one unit from its spec: no more and no less.
 
-The spec and the context files already contain the decisions. This
-skill's job is to carry them out faithfully. Extra features, tidy-ups,
-and "while I'm here" changes are how a build drifts away from its plan,
-so they are out even when they look helpful.
+The decisions were made when the spec was written, on a stronger model.
+This skill carries them out, which is why it runs on a cheaper one. It
+makes no product or design decisions; when one is needed, it stops and
+asks.
 
-This is the third of three skills: `plan-app` plans, `spec-unit`
-specifies one unit, and `build-unit` (this one) implements it.
+## Load
 
-It runs in one of three modes depending on what the user asks for:
-implement, correct, or close.
+Read the unit's spec in `context/specs/` and
+`context/progress-tracker.md`. That is all. The spec's "Rules for this
+unit" section holds what applies from the context files; open a context
+file only when the spec points to something it does not contain.
 
-## Before anything: load context
+With no unit named, use Next Up from the tracker and say which one in
+one line. If there is no spec for it, stop and point the user to
+`spec-unit`.
 
-Read the entry-point file (`CLAUDE.md` or `AGENTS.md`), every context
-file it lists, and the spec for the unit in `context/specs/`.
+Pick the mode from the request: implement, fix, or close.
 
-Stop and tell the user if:
+## Implement
 
-- there is no spec file for the unit (run `spec-unit` first)
-- a unit this one depends on is not marked complete in
-  `context/progress-tracker.md`
-- the spec conflicts with an invariant in `architecture.md`
+1. Create the branch `feat/NN-unit-name` if the project uses git and
+   the entry point names no other convention. If the working tree holds
+   unrelated uncommitted changes, tell the user first.
+2. Install only the packages listed under Dependencies.
+3. Build the spec section by section, following its Rules.
+4. Stay inside the unit: no refactoring of earlier units, nothing from
+   later units, nothing listed under Out of Scope, no edits to protected
+   paths. If something outside the unit looks wrong, mention it in the
+   report and leave it alone.
+5. Verify. Run each command in "Verify when done" once and read the
+   output; exercise the behavior you can exercise. If a check fails, fix
+   the cause and re-run only that check. What you cannot check yourself
+   (how a page looks, a flow that needs a real account) goes to the user
+   as a list.
+6. Set the tracker's Status to this unit, "built, awaiting your check",
+   then report in this shape and stop:
+   - files created or changed
+   - each checklist item: passed, failed, or needs your check
+   - how to try it
+   - anything noticed outside the unit, and any gap resolved
 
-If the user did not name a unit, use the one listed under Next Up in the
-progress tracker and confirm it.
+The unit is complete only when the user says it works.
 
-## Vague requests
+## When the spec is not enough
 
-A request is vague when it could be carried out in more than one way:
-"make it look nicer", "it feels off", "fix the form", "add the usual
-validation", "clean this up". Acting on one means guessing, and a wrong
-guess costs a rebuild.
+- **Gap:** the spec does not say what to do, or cannot be built as
+  written. Stop, say what is missing, offer two or three options with a
+  recommendation, and write the user's answer into the spec before
+  continuing. A choice with no visible effect (a local variable name) is
+  not a gap; decide and move on.
+- **Vague request** ("make it nicer", "fix the form"): say what is
+  unclear and ask one sharper question with your recommended answer.
+  Change no code on a guess.
+- **Something the spec does not contain** (a new feature, extra
+  behavior, a change to an earlier unit): do not build it, however
+  small. Add it under Ideas in the tracker and tell the user to run
+  `spec-unit` for it after this unit. The one exception is a detail that
+  plainly belongs to this unit's own result: with the user's yes, add it
+  to the spec first, then build it.
 
-Every time the user's request is vague, in any mode, do all three
-before changing code:
+## Fix
 
-1. **Say what is unclear**, in one line.
-2. **Ask one sharper question** at a time (which element, what it does
-   now, what it should do).
-3. **Give your recommended answer with the reason**, based on the spec
-   and context files, so the user can accept, adjust, or reject it.
+For a report that something does not match the spec.
 
-Keep asking until the request is concrete. When there is a real choice,
-show two or three options with trade-offs, recommend one, and say why
-the others lose for this project.
+1. State the mismatch in one line: what the spec says, what was built.
+2. If the spec is right, fix that and nothing else. If the user now
+   wants something different, update the spec first, then the code.
+3. Re-run only the checks the fix could affect, and report.
 
-## Requests outside the unit
+## Close
 
-While a unit is being built, the user will often ask for something the
-spec does not contain: a new feature, extra behavior, or a change to an
-earlier unit. Do not build it, even if it is small. Building it would
-make the spec wrong and move the build away from the plan.
+For when the user confirms the unit works.
 
-Instead:
-
-1. **Say that it is outside this unit**, and name the spec section or
-   Out of Scope line that shows it.
-2. **Ask detailed questions, one at a time:** what problem it solves
-   and for whom, where it sits in the core flow in
-   `project-overview.md`, what exactly the user does and sees, and what
-   happens if the app ships without it.
-3. **Push back when warranted, with the reason:** it is out of scope in
-   `project-overview.md`, it serves no goal, it duplicates something
-   built or planned, it is larger than it sounds, it delays a more
-   important unit, or it breaks an invariant.
-4. **Recommend the better path:** build now, later, or drop, plus an
-   alternative if one is better (a smaller version, a different feature
-   that meets the same need for less, or the same feature after the
-   core flow works). Say why it beats the original for this project.
-5. **Route the decision. The user decides.**
-   - It truly belongs to this unit's visible result and boundary:
-     update the spec file first (implementation, out of scope,
-     checklist), then build it.
-   - It is a separate piece of work: finish the current unit as
-     specified, then run `spec-unit` to add it to the build plan. Log
-     it in the progress tracker now so it is not lost.
-   - Later or dropped: record it in the progress tracker, or in Out of
-     Scope in `project-overview.md`, with the reason.
-
-## Mode 1: Implement
-
-1. **Mark it in progress.** Move the unit to In Progress in
-   `context/progress-tracker.md`.
-2. **Branch, if the project uses git.** Create
-   `feat/NN-unit-name` unless the context files define a different
-   convention. If the working tree has uncommitted changes that are not
-   part of this unit, tell the user before starting.
-3. **Install only what the spec lists** under Dependencies.
-4. **Implement the spec section by section**, following
-   `code-standards.md` and `ui-context.md`. Put each file in the folder
-   that owns that responsibility according to `architecture.md`.
-5. **Stay inside the unit.** Do not touch the protected files named in
-   `ai-workflow-rules.md`. Do not refactor code from earlier units,
-   add features from later units, or add anything listed under the
-   spec's Out of Scope. If something outside the unit looks wrong, note
-   it for the user; leave it alone.
-6. **Verify** (see below).
-7. **Report** (see below).
-
-### When the spec has a gap
-
-If the spec does not say what to do, or cannot be implemented as
-written, stop. Do not invent behavior. Tell the user what is missing,
-offer two or three options with a recommendation and the reasons, and
-once they decide, write the answer into the spec file before continuing.
-The spec has to stay an accurate record of what was built.
-
-A choice with no visible effect on behavior or structure (a local
-variable name, the order of two helper functions) is not a gap; follow
-`code-standards.md` and carry on.
-
-### Verify
-
-Go through the spec's "Verify when done" list one item at a time.
-
-- Run every command the list names (type check, lint, build, tests) and
-  read the output. A check counts as passed only after it was run and
-  passed.
-- For behavior you can exercise, exercise it.
-- For anything you cannot check yourself (how a page looks, a flow that
-  needs a real account or device), say so plainly and list it for the
-  user to check by hand.
-
-Also confirm that no invariant in `architecture.md` was violated.
-
-If a check fails, fix the cause and run the checks again. If it cannot
-be fixed within the unit's scope, stop and explain.
-
-### Report
-
-Give the user:
-
-- what was built, as a short list of files created or changed
-- the checklist, each item marked passed, failed, or needs your check
-- how to try it (the command to run and where to look)
-- anything noticed outside the unit's scope
-- any spec gap that was resolved and how
-
-Leave the unit In Progress. It is complete when the user says so.
-
-## Mode 2: Correct
-
-Used when the user reports that something does not match the spec.
-
-1. Restate the mismatch: what the spec says, what was built. If the
-   report is vague ("it looks wrong"), apply the vague-request rule
-   first. If what the user wants was never in the spec, treat it as a
-   request outside the unit.
-2. If the spec is right, fix only that. Change nothing else.
-3. If the user now wants something different from the spec, update the
-   spec first, then change the code to match.
-4. Re-run the checks that the fix could affect and report.
-
-## Mode 3: Close
-
-Used when the user confirms the unit works.
-
-1. Confirm every checklist item is passed, including the ones the user
-   checked by hand. If any is still open, ask about it.
-2. Update `context/progress-tracker.md`: move the unit to Completed, set
-   Next Up to the next unit in the build plan, record any architecture
-   decisions made during the unit with their reasons, and write session
-   notes a fresh session would need.
-3. If the implementation changed anything documented in a context file
-   (a boundary, a storage decision, a convention, the scope), update
-   that file now.
-4. Commit the work with a message naming the unit. Push the branch or
-   open a pull request only when the user asks for it.
-5. Tell the user the next step: `spec-unit` for the next unit.
-
-Do not start the next unit in the same turn.
+1. If a "needs your check" item was never confirmed, ask about it.
+2. Update the tracker in one edit: add the unit to Completed as one
+   line, set Next Up to the following unit in the build plan, add any
+   decision made during the unit with its reason, and replace Notes with
+   what a fresh session must know.
+3. If the build changed something a context file documents (a boundary,
+   a storage decision, a convention, the scope), update that file.
+4. Commit with a message naming the unit. Push or open a pull request
+   only when asked.
+5. Name the next step, `spec-unit` for the next unit, and stop.

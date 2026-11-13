@@ -1,211 +1,127 @@
 ---
 name: spec-unit
-description: Write the spec file for one unit of a planned build. Reads the project's context files and build plan, asks the user about anything unit-specific that is undecided, and writes context/specs/NN-unit-name.md with goal, design, implementation, dependencies, and a verification checklist. Use this whenever the user says "write the spec for unit 3", "spec the next unit", "what's next to build", "plan the next feature", or wants to add a new feature to a project that already has a context/ folder. Run this before build-unit; it writes no code.
+description: Write the spec file for one unit of a planned build, so it can be implemented without guessing. Use when the user says "spec the next unit", "write the spec for unit 3", "what's next to build", or wants to add a feature to a project that has a context/ folder. Run before build-unit; writes no code.
+argument-hint: "[unit number or feature]"
+model: opus
 ---
 
 # Spec Unit
 
-Write the complete instruction set for one unit of the build, so the
-implementing agent has nothing to guess.
+Write the complete instruction set for one unit, so the implementing
+agent has nothing to guess and no other file to read. Specs are written
+just before a unit is built, never all upfront, because each unit
+changes what the next one needs.
 
-A spec replaces the vague prompt. A vague spec gives vague code; a
-detailed one gives predictable code. Specs are written just before a
-unit is built, never all upfront, because each unit teaches something
-that changes the next.
+The thinking happens here, on the strongest model available;
+`build-unit` then carries the spec out on a cheaper one. That only works
+if the spec is self-contained.
 
-This is the second of three skills: `plan-app` produces the context
-files and build plan, `spec-unit` (this one) specifies one unit, and
-`build-unit` implements it.
+## Rules
 
-## Ground rules
+- Write no application code and install nothing. Output is one file in
+  `context/specs/` and a small tracker update.
+- One unit per run.
+- A product or design decision the context files do not settle is a
+  question for the user. Never spec from a vague request: when two
+  developers could build different things from it ("add a dashboard",
+  "let users share stuff"), say what is unclear, ask a sharper question,
+  and give your recommended answer with the reason.
 
-- **Write no application code and install nothing.** The only output is
-  one Markdown file in `context/specs/` and small updates to the
-  progress tracker.
-- **One unit per run.**
-- **Decide nothing on the user's behalf.** A product or design decision
-  that the context files do not settle is a question for the user.
-- **Never spec from a vague request.** See "Vague requests" below.
+## Step 1: Load only what this unit needs
 
-## Vague requests
+The entry point is already in context; do not read it again.
 
-A request is vague when two developers could build different things
-from it: "add a dashboard", "make onboarding better", "add some AI",
-"let users share stuff". A spec written from that is a guess with
-headings.
+- Always: `context/progress-tracker.md`,
+  `context/specs/00-build-plan.md`, `context/architecture.md`,
+  `context/code-standards.md`.
+- Only if the unit has an interface: `context/ui-context.md`.
+- Only to judge a request that is not in the plan:
+  `context/project-overview.md`.
 
-Every time the user's request or answer is vague, at any step, do all
-three before continuing:
-
-1. **Say what is unclear**, in one line.
-2. **Ask one sharper question** at a time (what the user clicks, what
-   appears, what is stored, what happens on failure).
-3. **Give your recommended answer with the reason**, tied to this
-   project's context files, so the user can accept, adjust, or reject
-   it.
-
-Keep asking until the answer is concrete. When there is a real choice
-to make, show two or three options with trade-offs, recommend one, and
-say why the others lose for this project.
-
-## Step 1: Load context
-
-Read the entry-point file (`CLAUDE.md` or `AGENTS.md`) and every context
-file it lists, then `context/specs/00-build-plan.md` and
-`context/progress-tracker.md`.
-
-If there is no `context/` folder or no build plan, stop and tell the
-user to run `plan-app` first. A spec written without the context files
-is just a guess with headings.
+If there is no `context/` folder or no build plan, stop and point the
+user to `plan-app`.
 
 ## Step 2: Pick the unit
 
-- If the user named a unit, use it.
-- Otherwise take the first unit in the build plan that the progress
-  tracker does not show as complete, and confirm it with the user.
-- Check that every unit it depends on is marked complete. If one is not,
-  say so and ask whether to spec that one instead.
-- If a spec file for this unit already exists, ask whether to revise it
-  or leave it.
-
-If what the user asks for is not in the build plan, or goes beyond the
-unit being specified, follow "Features outside the plan" below before
-doing anything else.
-
-## Features outside the plan
-
-This covers a new feature that is not in the build plan, and extra
-behavior the user wants to add to the current unit that the build plan
-did not give it. Do not quietly add either. Unplanned features are how
-a build ends up unlike the plan, so each one has to earn its place.
-
-**1. Ask detailed questions, one at a time.**
-
-- What problem does this solve, and for which user?
-- Where does it sit in the core user flow in `project-overview.md`?
-- What exactly does the user do and see? What data does it need?
-- What happens if the app ships without it?
-- Why now instead of after the remaining planned units?
-
-Apply the vague-request rule to every answer.
-
-**2. Check it against the context files and push back.**
-
-Push back, with the reason, when the feature:
-
-- is listed as out of scope in `project-overview.md` (quote the line)
-- does not serve any goal or step of the core flow
-- duplicates something already built or planned
-- is much larger than the user thinks (name the units it would take)
-- delays a planned unit that matters more
-- would break an invariant or need a stack change
-
-Pushing back means saying so clearly and asking the user to respond. It
-does not mean refusing; the user decides.
-
-**3. Recommend something better when there is something better.**
-
-Give an honest verdict: build now, build later, or drop. Where it fits,
-recommend an alternative with reasons: a smaller version that delivers
-most of the value, a different feature that serves the same goal at
-lower cost, or the same feature after the core flow works. Say why the
-alternative beats the original for this project.
-
-```
-You want comments on each project. Two concerns: comments are listed
-as out of scope in project-overview.md, and they need notifications
-and moderation to be useful, which is about three more units.
-
-What is the need behind it? If it is "leave a note for a teammate",
-I recommend a single notes field on the project instead: one small
-unit, no new tables beyond one column, and it covers that need.
-Full comments could follow once sharing exists.
-
-Notes field now, full comments later, or full comments now?
-```
-
-**4. Record the decision.**
-
-- **Build now:** update the scope in `project-overview.md` if it
-  changed, add the feature to the build plan as one or more new units
-  in the right position with dependencies, then spec the right unit.
-  Extra behavior stays out of the current unit unless it truly belongs
-  to the same visible result and the same boundary.
-- **Later:** add it to the progress tracker as a future idea, with the
-  reason it was deferred.
-- **Dropped:** add it to Out of Scope in `project-overview.md` so it is
-  not proposed again.
+Use the unit the user named; otherwise the first one in the build plan
+that the tracker does not show as complete, stated in one line without
+waiting for confirmation. If a unit it depends on is not complete, say
+so and offer to spec that one instead. If its spec file already exists,
+ask whether to revise it.
 
 ## Step 3: Look at what exists
 
-Read the code this unit will touch or build on: the files from earlier
-units, existing components, routes, schema. The spec must name real
-paths and real function or component names, and reuse what is already
-there. Read the spec files of the units it depends on to see what they
-actually delivered.
+Find the code this unit touches or builds on, by search first, reading
+only the files it will change or call. The spec must name real paths and
+real function or component names and reuse what is there. Open an
+earlier unit's spec only when the code does not show what it delivered.
 
-## Step 4: Close the gaps
+## Step 4: Close the gaps in one message
 
-List what this unit needs that the context files and build plan do not
-answer. Typical gaps: exact fields on a form, validation rules, empty,
-loading, and error states, what happens on failure, the precise shape of
-an API response, mobile behavior, wording.
+List everything this unit needs that the files do not answer: form
+fields, validation rules, empty, loading and error states, behavior on
+failure, response shapes, mobile behavior, wording. Ask them together,
+numbered, each with your recommended answer so the user can reply "ok"
+to all or change a few. Give options with trade-offs only where there is
+a real choice. Do not ask what a context file already settles.
 
-Ask the user about these one at a time. When they are unsure, give two
-or three options with trade-offs, recommend one with reasons tied to
-this project, and say why the others lose. Do not ask about things the
-context files already settle; quote the file instead.
-
-If the unit turns out to cross a system boundary or to be too big for
-one session, propose splitting it and update the build plan once the
-user agrees. One feature may need one spec or three.
+If the unit crosses a system boundary or is too big for one session,
+propose a split and update the build plan once the user agrees.
 
 ## Step 5: Write the spec
 
-Save to `context/specs/NN-kebab-case-name.md`, where NN is the unit's
-two-digit number in the build plan. Use `assets/spec-template.md`.
+Save to `context/specs/NN-kebab-case-name.md` using
+`assets/spec-template.md`, where NN is the unit's number in the build
+plan.
 
-- **Goal:** one or two sentences naming the concrete output. Weak:
-  "Create the auth pages." Strong: "Create sign-in and sign-up pages
-  using the auth provider's components, two-panel on desktop and
-  form-only on mobile, with unauthenticated users redirected to
-  /sign-in."
-- **Design:** every visual decision for this unit, using token names
-  from `ui-context.md`. Layout, components, states, responsive behavior.
-  The agent should have no visual choice left to make.
-- **Implementation:** one sub-section per component, route, or module.
-  Give the file path, what it receives, what it returns or renders, and
-  how it handles errors. Describe behavior; leave the code to
-  `build-unit`.
-- **Out of Scope:** what belongs to later units, especially the things
-  an agent would be tempted to add now.
-- **Dependencies:** each new package with its reason, or "None". Only
-  packages first needed in this unit.
-- **Verify when done:** conditions specific enough to check, covering
-  each behavior in the spec, plus the project's own type check, lint,
-  and build commands from `ai-workflow-rules.md`.
+- **Goal:** the concrete output. Weak: "Create the auth pages." Strong:
+  "Sign-in and sign-up pages using the auth provider's components,
+  two-panel on desktop, form only on mobile, unauthenticated users
+  redirected to /sign-in."
+- **Rules for this unit:** copy, word for word, the invariants,
+  standards, boundaries, and protected paths that apply to this unit,
+  and for a UI unit the tokens it uses, with their values. This section
+  is what lets `build-unit` skip the context files, so leave out what
+  does not apply and include everything that does.
+- **Design:** every visual decision, by token name: layout, components,
+  states, responsive behavior.
+- **Implementation:** one sub-section per component, route, or module:
+  file path, what it receives, what it returns or renders, how it
+  handles errors. Describe behavior; the code is `build-unit`'s job.
+- **Out of Scope:** what belongs to later units, especially what an
+  agent would be tempted to add now.
+- **Dependencies:** each new package with its reason, or "None".
+- **Verify when done:** one checkable condition per behavior, then the
+  project's exact verify commands.
 
-## Step 6: Check it
+Write it so that it already holds: every file sits in the folder that
+owns the responsibility, nothing breaks an invariant, and a fresh agent
+could build it without asking a question. If the unit cannot be built
+without changing a context file, tell the user and update that file once
+they agree.
 
-Before showing the user, check the spec against the context files:
+## Step 6: Hand off
 
-- Does anything break an invariant in `architecture.md`?
-- Does every file sit in the folder that owns that responsibility?
-- Does it follow `code-standards.md`?
-- Does it use only tokens and components defined in `ui-context.md`?
-- Does it stay inside the scope in `project-overview.md`?
-- Could a fresh agent implement it without asking a question?
+In `context/progress-tracker.md`, set Next Up to this unit with "spec
+written" and record any decision from Step 4 that affects later units.
+Give the user the file path and a summary of at most five lines, then
+stop. `build-unit` is next, after the user has read the spec.
 
-Fix what fails. If the unit cannot be built without changing a context
-file, tell the user, and update that file once they agree, before
-finishing the spec.
+## A request that is not in the plan
 
-## Step 7: Hand off
+This covers a new feature and extra behavior for the current unit.
+Neither goes in quietly; unplanned features are how a build ends up
+unlike its plan.
 
-Show the user a short summary of the spec and the path to the file. In
-`context/progress-tracker.md`, set Next Up to this unit with the note
-"spec written", and record any decisions made during Step 4 that affect
-later units.
-
-Then stop. The next step is `build-unit`, which the user starts after
-reading the spec.
+1. Ask, in one message, what need it serves and for whom, where it sits
+   in the core flow, and what happens if the app ships without it.
+2. Check it against `project-overview.md` and `architecture.md`. Say so
+   plainly when it is listed as out of scope (quote the line), serves no
+   goal, duplicates something built or planned, is bigger than it sounds
+   (name the units it would take), or needs a stack or invariant change.
+3. Give a verdict with the reason (now, later, or drop) and a smaller
+   alternative when one covers the same need. The user decides.
+4. Record it. Now: update the scope in `project-overview.md` if it
+   changed, add the unit or units to the build plan in the right
+   position, then spec the right one. Later: add it under Ideas in the
+   tracker with the reason. Dropped: add it to Out of Scope.

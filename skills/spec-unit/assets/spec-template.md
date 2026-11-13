@@ -1,39 +1,39 @@
-# Unit NN: [Feature Name]
+# Unit NN: [Feature name]
 
 ## Goal
 
-[One or two sentences describing the concrete output of this unit.]
+[One or two sentences naming the concrete output.]
+
+## Rules for this unit
+
+[Copied from the context files, so the build needs no other file.]
+
+- Invariants: [the ones this unit could break]
+- Standards: [the conventions this unit's code must follow]
+- Boundaries: [which folder owns each file this unit creates]
+- Tokens: [name and value of each token used, or "No UI"]
+- Do not modify: [protected paths near this unit, or "None"]
 
 ## Design
 
-[Visual and structural decisions specific to this unit. Reference
-ui-context.md tokens by name. Describe layout, component choices,
-states (empty, loading, error), and responsive behavior. Write
-"No UI in this unit." if that is the case.]
+[Layout, components, states (empty, loading, error), responsive
+behavior, by token name. "No UI in this unit." if so.]
 
 ## Implementation
 
-### [Component, route, or sub-section name]
+### [Component, route, or module]
 
-[Exactly what to build: file path, inputs, outputs, behavior,
-error handling.]
-
-### [Next sub-section]
-
-[Description.]
+[File path, inputs, outputs, behavior, error handling.]
 
 ## Out of Scope
 
-- [Things an agent might be tempted to add that belong to a later unit]
+- [What an agent might add that belongs to a later unit]
 
 ## Dependencies
 
-- [package-name — reason] or "None."
+- [package: reason] or "None."
 
 ## Verify when done
 
-- [ ] [Specific, checkable condition]
-- [ ] [Specific, checkable condition]
-- [ ] No type or lint errors
-- [ ] No console or runtime errors
-- [ ] [Project build command] passes
+- [ ] [One checkable condition per behavior]
+- [ ] `[type check, lint, build and test commands]` pass
